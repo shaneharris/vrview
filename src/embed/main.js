@@ -34,6 +34,11 @@ var receiver = new IFrameMessageReceiver();
 receiver.on(Message.PLAY, onPlayRequest);
 receiver.on(Message.PAUSE, onPauseRequest);
 receiver.on(Message.ADD_HOTSPOT, onAddHotspot);
+receiver.on(Message.SETUP_NAVIGATION, onAddNavigation);
+receiver.on(Message.ENABLE_MULTIPLAYER_MODE, enableMultiplayerMode);
+receiver.on(Message.JOIN_MULTIPLAYER_ROOM, joinMultiplayerRoom);
+receiver.on(Message.LEAVE_MULTIPLAYER_ROOM, leaveMultiplayerRoom);
+receiver.on(Message.SET_MULTIPLAYER_ME, setMultiplayerMe);
 receiver.on(Message.SET_CONTENT, onSetContent);
 receiver.on(Message.SET_VOLUME, onSetVolume);
 
@@ -133,7 +138,7 @@ function onPauseRequest() {
 }
 
 function onAddHotspot(e) {
-  console.log('onAddHotspot', e);
+  // console.log('onAddHotspot', e);
   // TODO: Implement some validation?
 
   var pitch = parseFloat(e.pitch);
@@ -141,25 +146,42 @@ function onAddHotspot(e) {
   var radius = parseFloat(e.radius);
   var distance = parseFloat(e.distance);
   var id = e.id;
-  worldRenderer.hotspotRenderer.add(pitch, yaw, radius, distance, id);
+  var image = e.image;
+  var is_stereo = e.is_stereo;
+  worldRenderer.hotspotRenderer.add(pitch, yaw, radius, distance, id, image, is_stereo);
+  
 }
-
+function enableMultiplayerMode(){
+  worldRenderer.multiplayerMode.enableMultiplayerMode();
+}
+function setMultiplayerMe(e){
+  worldRenderer.multiplayerMode.setMe(e);
+}
+function joinMultiplayerRoom(e){
+  worldRenderer.multiplayerMode.joinRoom(e.room);
+}
+function leaveMultiplayerRoom(){
+  
+}
+function onAddNavigation(e) {
+  worldRenderer.navigationRenderer.setup(e);
+}
 function onSetContent(e) {
-  console.log('onSetContent', e);
-  // Remove all of the hotspots.
-  worldRenderer.hotspotRenderer.clearAll();
+  // console.log('onSetContent', e);
   // Fade to black.
   worldRenderer.sphereRenderer.setOpacity(0, 500).then(function() {
     // Then load the new scene.
     var scene = SceneInfo.loadFromAPIParams(e.contentInfo);
+    // Remove all of the hotspots.
+    worldRenderer.hotspotRenderer.clearAll();
+    // Destroy the world
     worldRenderer.destroy();
-
     // Update the URL to reflect the new scene. This is important particularily
     // on iOS where we use a fake fullscreen mode.
     var url = scene.getCurrentUrl();
-    console.log('Updating url to be %s', url);
+    //console.log('Updating url to be %s', url);
     window.history.pushState(null, 'VR View', url);
-
+    e.callback();
     // And set the new scene.
     return worldRenderer.setScene(scene);
   }).then(function() {

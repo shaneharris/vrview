@@ -91,15 +91,15 @@ HotspotRenderer.prototype = new EventEmitter();
  * in meters.
  * @param hotspotId {String} The ID of the hotspot.
  */
-HotspotRenderer.prototype.add = function(pitch, yaw, radius, distance, id) {
-  console.log('HotspotRenderer.add', pitch, yaw, radius, distance, id);
+HotspotRenderer.prototype.add = function(pitch, yaw, radius, distance, id, image, is_stereo) {
+  //console.log('HotspotRenderer.add', pitch, yaw, radius, distance, id, image);
   // If a hotspot already exists with this ID, stop.
   if (this.hotspots[id]) {
     // TODO: Proper error reporting.
     console.error('Attempt to add hotspot with existing id %s.', id);
     return;
   }
-  var hotspot = this.createHotspot_(radius, distance);
+  var hotspot = this.createHotspot_(radius, distance, image, is_stereo);
   hotspot.name = id;
 
   // Position the hotspot based on the pitch and yaw specified.
@@ -163,7 +163,7 @@ HotspotRenderer.prototype.update = function(camera) {
   this.fadeOffCenterHotspots_(camera);
 
   var hotspots = this.hotspotRoot.children;
-
+  
   // Go through all hotspots to see if they are currently selected.
   for (var i = 0; i < hotspots.length; i++) {
     var hotspot = hotspots[i];
@@ -281,14 +281,28 @@ HotspotRenderer.prototype.getSize_ = function() {
   return this.worldRenderer.renderer.getSize();
 };
 
-HotspotRenderer.prototype.createHotspot_ = function(radius, distance) {
+HotspotRenderer.prototype.createHotspot_ = function(radius, distance, image, is_stereo) {
   var innerGeometry = new THREE.CircleGeometry(radius, 32);
 
   var innerMaterial = new THREE.MeshBasicMaterial({
     color: 0xffffff, side: THREE.DoubleSide, transparent: true,
     opacity: MAX_INNER_OPACITY, depthTest: false
   });
-
+  if(image&&image!="0"){
+    var loader = new THREE.TextureLoader();
+    loader.crossOrigin = 'anonymous';
+    loader.load(image, function(texture){
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      if(is_stereo&&is_stereo!="0"){
+        texture.repeat.set(0.5, 0.5);
+      }else{
+        texture.repeat.set(0.5, 1);
+      }
+      innerMaterial.map = texture;
+      innerMaterial.map.needsUpdate = true;
+      innerMaterial.needsUpdate = true;
+    });
+  }
   var inner = new THREE.Mesh(innerGeometry, innerMaterial);
   inner.name = 'inner';
 

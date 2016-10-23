@@ -80,6 +80,13 @@ function onVRViewReady(e) {
   console.log('onVRViewReady');
 
   vrView.setupNavigation(scenes);
+  
+  document.getElementById("submit").onclick = function(){
+    vrView.setMultiplayerMe({name:document.getElementById("name").value,face:"examples/multiplayer/"+document.getElementById("name").value+".png"});
+    vrView.enableMultiplayer();
+    vrView.joinMultiplayerRoom("test-room");
+  };
+  console.log("multiplayer setup");
   // Create the carousel links
   var carouselItems = document.querySelectorAll('ul.carousel li a');
   for (var i = 0; i < carouselItems.length; i++) {

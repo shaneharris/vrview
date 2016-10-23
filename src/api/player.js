@@ -47,17 +47,45 @@ Player.prototype = new EventEmitter();
  * in meters.
  * @param hotspotId {String} The ID of the hotspot.
  */
-Player.prototype.addHotspot = function(hotspotId, params) {
-  // TODO: Add validation to params.
+Player.prototype.addHotspot = function(params) {
+  // TODO: Implement some validation?
+  if(!(params.id)){
+    params.id="hotspot-"+Math.random();
+    console.warn("Hotspot added without ID or ID of '0'. Auto generated id of "+params.id);
+  }
+  
   var data = {
-    pitch: params.pitch,
-    yaw: params.yaw,
-    radius: params.radius,
-    distance: params.distance,
-    id: hotspotId
+    pitch: params.pitch||0,
+    yaw: params.yaw||0,
+    radius: params.radius||0.05,
+    distance: params.distance||1,
+    id: params.id,
+    image: params.image||0,
+    is_stereo: params.is_stereo||0
   };
   this.sender.send({type: Message.ADD_HOTSPOT, data: data});
+  return params.id;
 };
+
+
+Player.prototype.setupNavigation = function(data) {
+  this.sender.send({type: Message.SETUP_NAVIGATION, data: data});
+};
+// multiplayer stuff.
+Player.prototype.enableMultiplayer = function() {
+  this.sender.send({type: Message.ENABLE_MULTIPLAYER_MODE, data: {}});
+};
+Player.prototype.setMultiplayerMe = function(data) {
+  this.sender.send({type: Message.SET_MULTIPLAYER_ME, data: data});
+};
+Player.prototype.joinMultiplayerRoom = function(room) {
+  this.sender.send({type: Message.JOIN_MULTIPLAYER_ROOM, data: {room:room}});
+};
+Player.prototype.leaveMultiplayerRoom = function(room) {
+  this.sender.send({type: Message.LEAVE_MULTIPLAYER_ROOM, data: {room:room}});
+};
+
+
 
 Player.prototype.play = function() {
   this.sender.send({type: Message.PLAY});
@@ -67,11 +95,11 @@ Player.prototype.pause = function() {
   this.sender.send({type: Message.PAUSE});
 };
 
-Player.prototype.setContent = function(contentInfo) {
+Player.prototype.setContent = function(contentInfo,callback) {
   var data = {
     contentInfo: contentInfo
   };
-  this.sender.send({type: Message.SET_CONTENT, data: data});
+  this.sender.send({type: Message.SET_CONTENT, data: data},callback);
 };
 
 /**
@@ -117,6 +145,20 @@ Player.prototype.onMessage_ = function(event) {
   var data = message.data;
 
   switch (type) {
+    case Message.DEVICE_MOTION:
+    case Message.SET_CONTENT:
+    case Message.SET_VOLUME:
+    case Message.ADD_HOTSPOT:
+    case Message.PLAY:
+    case Message.PAUSE:
+    case Message.SETUP_NAVIGATION:
+    case Message.ENABLE_MULTIPLAYER_MODE:
+    case Message.JOIN_MULTIPLAYER_ROOM:
+    case Message.LEAVE_MULTIPLAYER_ROOM:
+    case Message.SET_MULTIPLAYER_ME:
+      if(Message.callbacks[event.data.type]&&typeof Message.callbacks[event.data.type] == "function")Message.callbacks[event.data.type]();
+      //console.log('onMessageReturn_', event);
+      break;
     case 'ready':
     case 'modechange':
     case 'error':
@@ -124,7 +166,6 @@ Player.prototype.onMessage_ = function(event) {
       this.emit(type, data);
       break;
     case 'paused':
-      console.log('isPaused', data);
       this.isPaused = data;
       break;
     case 'enter-fullscreen':

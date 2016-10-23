@@ -33,12 +33,16 @@ function IFrameMessageReceiver() {
 IFrameMessageReceiver.prototype = new EventEmitter();
 
 IFrameMessageReceiver.prototype.onMessage_ = function(event) {
-  console.log('onMessage_', event);
+  //console.log('onMessage_', event);
 
   var message = event.data;
   var type = message.type.toLowerCase();
   var data = message.data;
-
+  if(type == Message.SET_CONTENT){
+    data.callback = function(){
+      Util.sendParentMessage({type:type});
+    };
+  }
   switch (type) {
     case Message.DEVICE_MOTION:
       // Synthesize a DeviceMotion event.
@@ -49,11 +53,16 @@ IFrameMessageReceiver.prototype.onMessage_ = function(event) {
     case Message.ADD_HOTSPOT:
     case Message.PLAY:
     case Message.PAUSE:
+    case Message.SETUP_NAVIGATION:
+    case Message.ENABLE_MULTIPLAYER_MODE:
+    case Message.JOIN_MULTIPLAYER_ROOM:
+    case Message.LEAVE_MULTIPLAYER_ROOM:
+    case Message.SET_MULTIPLAYER_ME:
       // TODO(smus): Emit the event 
       this.emit(type, data);
       break;
     default:
-      console.warn('Got unknown message of type %s from %s', message.type, message.origin);
+      console.warn('Got unknown message of type %s from %s', type, Message.SET_CONTENT, message.origin);
   }
 };
 

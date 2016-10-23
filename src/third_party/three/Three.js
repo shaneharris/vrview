@@ -5,6 +5,7 @@ export { Scene } from '../../../node_modules/three/src/scenes/Scene.js';
 export { Mesh } from '../../../node_modules/three/src/objects/Mesh.js';
 export { VideoTexture } from '../../../node_modules/three/src/textures/VideoTexture.js';
 export { MeshBasicMaterial } from '../../../node_modules/three/src/materials/MeshBasicMaterial.js';
+export { MeshPhongMaterial } from '../../../node_modules/three/src/materials/MeshPhongMaterial.js';
 export { TextureLoader } from '../../../node_modules/three/src/loaders/TextureLoader.js';
 export { PerspectiveCamera } from '../../../node_modules/three/src/cameras/PerspectiveCamera.js';
 export { Object3DIdCount, Object3D } from '../../../node_modules/three/src/core/Object3D.js';
@@ -21,7 +22,14 @@ export { ColorKeywords, Color } from '../../../node_modules/three/src/math/Color
 export { TorusGeometry } from '../../../node_modules/three/src/extras/geometries/TorusGeometry.js';
 export { SphereGeometry } from '../../../node_modules/three/src/extras/geometries/SphereGeometry.js';
 export { CircleGeometry } from '../../../node_modules/three/src/extras/geometries/CircleGeometry.js';
+export { PlaneGeometry } from '../../../node_modules/three/src/extras/geometries/PlaneGeometry.js';
 export { RingGeometry } from '../../../node_modules/three/src/extras/geometries/RingGeometry.js';
+export { CylinderGeometry } from '../../../node_modules/three/src/extras/geometries/CylinderGeometry.js';
+export { BoxGeometry } from '../../../node_modules/three/src/extras/geometries/BoxGeometry.js';
+export { Light } from '../../../node_modules/three/src/lights/Light.js';
+export { AmbientLight } from '../../../node_modules/three/src/lights/AmbientLight.js';
+export { PointLight } from '../../../node_modules/three/src/lights/PointLight.js';
+export { Group } from '../../../node_modules/three/src/objects/Group.js';
 export * from '../../../node_modules/three/src/constants.js';
 
 import '../../../node_modules/three/examples/js/controls/VRControls.js';

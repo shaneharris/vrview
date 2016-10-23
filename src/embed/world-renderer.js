@@ -17,6 +17,8 @@ var EventEmitter = require('eventemitter3');
 var Eyes = require('./eyes');
 var HotspotRenderer = require('./hotspot-renderer');
 var ReticleRenderer = require('./reticle-renderer');
+var NavigationRenderer = require('./navigation-renderer');
+var MultiplayerMode = require('./multiplayer-mode');
 var SphereRenderer = require('./sphere-renderer');
 var TWEEN = require('tween.js');
 var Util = require('../util');
@@ -25,6 +27,7 @@ var WebVRManager = require('webvr-boilerplate');
 
 var AUTOPAN_DURATION = 3000;
 var AUTOPAN_ANGLE = 0.4;
+
 
 /**
  * The main WebGL rendering entry point. Manages the scene, camera, VR-related
@@ -44,16 +47,20 @@ function WorldRenderer() {
   this.init_();
 
   this.sphereRenderer = new SphereRenderer(this.scene);
+  this.reticleRenderer = new ReticleRenderer(this.camera);
   this.hotspotRenderer = new HotspotRenderer(this);
+  this.navigationRenderer = new NavigationRenderer(this);
+  this.multiplayerMode = new MultiplayerMode(this);
   this.hotspotRenderer.on('focus', this.onHotspotFocus_.bind(this));
   this.hotspotRenderer.on('blur', this.onHotspotBlur_.bind(this));
-  this.reticleRenderer = new ReticleRenderer(this.camera);
 }
 WorldRenderer.prototype = new EventEmitter();
 
 WorldRenderer.prototype.render = function(time) {
   this.controls.update();
   this.hotspotRenderer.update(this.camera);
+  this.navigationRenderer.update_(this.camera);
+  this.multiplayerMode.update();
   TWEEN.update(time);
   this.effect.render(this.scene, this.camera);
 };
@@ -144,7 +151,7 @@ WorldRenderer.prototype.setScene = function(scene) {
   }
 
   this.sceneInfo = scene;
-  console.log('Loaded scene', scene);
+ // console.log('Loaded scene', scene);
 
   return promise;
 };
@@ -183,7 +190,7 @@ WorldRenderer.prototype.didLoadFail_ = function(message) {
 WorldRenderer.prototype.setDefaultYaw_ = function(angleRad) {
   // Rotate the camera parent to take into account the scene's rotation.
   // By default, it should be at the center of the image.
-  this.camera.parent.rotation.y = (Math.PI / 2.0) + angleRad;
+  //this.camera.parent.rotation.y = (Math.PI / 2.0) + angleRad;
 };
 
 /**
@@ -201,14 +208,14 @@ WorldRenderer.prototype.autopan = function(duration) {
 WorldRenderer.prototype.init_ = function() {
   var container = document.querySelector('body');
   var aspect = window.innerWidth / window.innerHeight;
-  var camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 100);
+  var camera = new THREE.PerspectiveCamera(75, aspect, 0.000000001, 500);
   camera.layers.enable(1);
 
   var cameraDummy = new THREE.Object3D();
   cameraDummy.add(camera);
 
   // Antialiasing disabled to improve performance.
-  var renderer = new THREE.WebGLRenderer({antialias: false});
+  var renderer = new THREE.WebGLRenderer({antialias: true});
   renderer.setClearColor(0x000000, 0);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -254,9 +261,9 @@ WorldRenderer.prototype.onVRDisplayPresentChange_ = function(e) {
   var isVR = this.isVRMode();
 
   // If the mode changed to VR and there is at least one hotspot, show reticle.
-  var isReticleVisible = isVR && this.hotspotRenderer.getCount() > 0;
-  //this.reticleRenderer.setVisibility(isReticleVisible);
-  console.log('Mode changed and reticle visibility is now: %s', isReticleVisible);
+  //var isReticleVisible = isVR;
+  this.reticleRenderer.setVisibility(isVR);
+  //console.log('Mode changed and reticle visibility is now: %s', isReticleVisible);
 
   // Resize the renderer for good measure.
   this.onResize_();
@@ -283,17 +290,23 @@ WorldRenderer.prototype.createScene_ = function(opt_params) {
   photoGroup.name = 'photo';
   scene.add(photoGroup);
 
+  // Add a group for the navigation.
+  var navGroup = new THREE.Object3D();
+  navGroup.name = 'nav';
+  scene.add(navGroup);
+  
+  scene.add(new THREE.AmbientLight(0xFFFFFF));
   return scene;
 };
 
 WorldRenderer.prototype.onHotspotFocus_ = function(id) {
-  console.log('onHotspotFocus_', id);
+  //console.log('onHotspotFocus_', id);
   // Set the default cursor to be a pointer.
   this.setCursor_('pointer');
 };
 
 WorldRenderer.prototype.onHotspotBlur_ = function(id) {
-  console.log('onHotspotBlur_', id);
+  //console.log('onHotspotBlur_', id);
   // Reset the default cursor to be the default one.
   this.setCursor_('');
 };

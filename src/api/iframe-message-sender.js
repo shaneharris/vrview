@@ -37,9 +37,10 @@ function IFrameMessageSender(iframe) {
 /**
  * Sends a message to the associated VR View IFrame.
  */
-IFrameMessageSender.prototype.send = function(message) {
+IFrameMessageSender.prototype.send = function(message,callback) {
   var iframeWindow = this.iframe.contentWindow;
   iframeWindow.postMessage(message, '*');
+  Message.callbacks[message.type.toLowerCase()] = callback;
 };
 
 IFrameMessageSender.prototype.onDeviceMotion_ = function(e) {

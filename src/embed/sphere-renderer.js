@@ -135,7 +135,7 @@ SphereRenderer.prototype.createPhotosphere_ = function(texture, opt_params) {
   p.thetaStart = p.thetaStart || 0;
   p.thetaLength = p.thetaLength || Math.PI;
 
-  var geometry = new THREE.SphereGeometry(1, 48, 48,
+  var geometry = new THREE.SphereGeometry(1000, 48, 48,
       p.phiStart, p.phiLength, p.thetaStart, p.thetaLength);
   geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
   var uvs = geometry.faceVertexUvs[0];
@@ -156,7 +156,7 @@ SphereRenderer.prototype.createPhotosphere_ = function(texture, opt_params) {
 };
 
 SphereRenderer.prototype.createOpacityMask_ = function() {
-  var geometry = new THREE.SphereGeometry(0.49, 48, 48);
+  var geometry = new THREE.SphereGeometry(0.2, 48, 48);
   var material = new THREE.MeshBasicMaterial({
     color: 0x000000, side: THREE.DoubleSide, opacity: 0, transparent: true});
   var opacityMask = new THREE.Mesh(geometry, material);
