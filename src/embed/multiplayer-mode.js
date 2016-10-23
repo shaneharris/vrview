@@ -62,7 +62,6 @@ MultiplayerMode.prototype.renderRoom = function(room){
                 cube = new THREE.Group();
                 cube.cube = new THREE.Mesh( geometry, material );
                 
-                cube.cube.renderOrder=-1;
                 cube.add(cube.cube);
                 cube.leftMeshes=[];
                 cube.rightMeshes=[];
@@ -102,23 +101,33 @@ MultiplayerMode.prototype.setMe = function(data){
 };
 MultiplayerMode.prototype.renderHands = function(object,frame,isLeap){
     var countBones = 0;
-    var countArms = 0;
+    //var countArms = 0;
+    var that = this;
     if(isLeap){
-        object.armMeshes.forEach( function( item ) { object.remove( item ); } );
-        object.boneMeshes.forEach( function( item ) { object.remove( item ); } );
         this.me.leftHand=[];
         this.me.rightHand=[];
-        for ( var hand of frame.hands ) {
-            for ( var finger of hand.fingers ) {
-                for ( var bone of finger.bones ) {
-                    if ( countBones++ === 0 ) { continue; }
+        frame.hands.forEach(function(hand){
+        //for ( var hand of frame.hands ) {
+            hand.fingers.forEach(function(finger){
+            //for ( var finger of hand.fingers ) {
+                finger.bones.forEach(function(bone){
+                //for ( var bone of finger.bones ) {
+                    //if (  === 0 ) { continue; }
                     bone.center_ = bone.center();
                     bone.matrix_ = bone.matrix();
-                    var boneMesh = object.boneMeshes [ countBones ] || this.addBoneMesh( object.boneMeshes );
-                    this.updateBoneMesh( bone, boneMesh, object, isLeap );
-                    this.addHandToMe(hand.type,bone);
-                }
-            }
+                    //var boneMesh = object.boneMeshes [ countBones ] || that.addBoneMesh( object.boneMeshes );
+                    var boneMesh;
+                    if(object.boneMeshes [ countBones ]){
+                         boneMesh = object.boneMeshes [ countBones ];
+                    }else{
+                         boneMesh = that.addBoneMesh( object.boneMeshes );
+                         object.add( boneMesh );
+                    }
+                    that.updateBoneMesh( bone, boneMesh, object, isLeap );
+                    that.addHandToMe(hand.type,bone);
+                    countBones++;
+                });
+            });
             //var arm = hand.arm;
             //arm.center_ = arm.center();
             //arm.matrix_ = arm.matrix();
@@ -126,17 +135,26 @@ MultiplayerMode.prototype.renderHands = function(object,frame,isLeap){
             ////this.addHandToMe(hand.type,arm);
             //this.updateBoneMesh( arm, armMesh, object, isLeap );
             //armMesh.scale.set( arm.width / 4, arm.width / 2, arm.length );
-        }
+        });
     }else{
-        object.leftMeshes.forEach( function( item ) { object.remove( item ); } );
-        object.rightMeshes.forEach( function( item ) { object.remove( item ); } );
-        var that = this;
         frame.leftHand.forEach(function(bone,i){
-            var boneMesh = object.leftMeshes [ i ] || that.addBoneMesh( object.leftMeshes );
+            var boneMesh;
+            if(object.leftMeshes [ i ]){
+                 boneMesh = object.leftMeshes [ i ];
+            }else{
+                 boneMesh = that.addBoneMesh( object.leftMeshes );
+                 object.add( boneMesh );
+            }
             that.updateBoneMesh( bone, boneMesh, object, isLeap );
         });
         frame.rightHand.forEach(function(bone,i){
-            var boneMesh = object.rightMeshes [ i ] || that.addBoneMesh( object.rightMeshes );
+             var boneMesh;
+            if(object.rightMeshes [ i ]){
+                 boneMesh = object.rightMeshes [ i ];
+            }else{
+                 boneMesh = that.addBoneMesh( object.rightMeshes );
+                 object.add( boneMesh );
+            }
             that.updateBoneMesh( bone, boneMesh, object, isLeap);
         });
     }
@@ -147,10 +165,9 @@ MultiplayerMode.prototype.addHandToMe = function( side, bone ) {
 };
 
 MultiplayerMode.prototype.addBoneMesh = function( meshes ) {
-    var geometry = new THREE.SphereGeometry( 1, 20, 20 );
+    var geometry = new THREE.SphereGeometry( 0.4, 20, 20 );
     var material = new THREE.MeshPhongMaterial( {color: 0xefefef} );
     var mesh = new THREE.Mesh( geometry, material );
-        mesh.renderOrder=1;
     meshes.push( mesh );
     return mesh;
 };
@@ -159,12 +176,11 @@ MultiplayerMode.prototype.updateBoneMesh = function( bone, mesh, parent, isLeap)
         if(isLeap){
             mesh.setRotationFromMatrix( new THREE.Matrix4().fromArray( bone.matrix_ ) );
             mesh.quaternion.multiply( new THREE.Quaternion().setFromEuler( new THREE.Euler( 0, 0, Math.PI / 2 ) ) );
-            mesh.scale.set( bone.width/10, bone.width/10, bone.length*0.8 );
-            mesh.position.set( bone.center_[0],bone.center_[1],bone.center_[2] );
+            mesh.scale.set( bone.width/1000, bone.width/1000, bone.length);
+            mesh.position.set( bone.center_[0],bone.center_[1],bone.center_[2]);
         }else{
-            mesh.position.set( bone.center_[0],bone.center_[1],bone.center_[2] );
+            mesh.position.set( bone.center_[0],bone.center_[1],bone.center_[2]);
         }
-        parent.add( mesh );
 };
 
 MultiplayerMode.prototype.leapMotion = function(){
@@ -172,12 +188,13 @@ MultiplayerMode.prototype.leapMotion = function(){
     that.camera.armMeshes = [];
 	that.camera.boneMeshes = [];
     
-    Leap.loop({enableGestures:true,optimizeHMD: true,background: true}, function(frame){
+    Leap.loop({enableGestures:true,/*optimizeHMD: true,background: true*/}, function(frame){
         that.renderHands(that.camera,frame,true);
     }).use('transform', {
-        quaternion: new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI * -0.3, 0, Math.PI, 'ZXY')),
-        position: new THREE.Vector3(0, 0,20),
-        scale:0.18,
+        //quaternion: new THREE.Quaternion().setFromEuler(new THREE.Euler((Math.PI * -0.3), 0, Math.PI, 'ZXY')),
+        position: new THREE.Vector3(0, -50,-100),
+        scale:100,
+        vr: true,
         //effectiveParent:that.camera
     })
     /*.use('boneHand', {

@@ -295,7 +295,7 @@ WorldRenderer.prototype.createScene_ = function(opt_params) {
   navGroup.name = 'nav';
   scene.add(navGroup);
   
-  scene.add(new THREE.AmbientLight(0xFFFFFF));
+  scene.add(new THREE.PointLight(0xFFFFFF));
   return scene;
 };
 

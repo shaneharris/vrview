@@ -151,7 +151,7 @@ SphereRenderer.prototype.createPhotosphere_ = function(texture, opt_params) {
   var material = new THREE.MeshBasicMaterial({ map: texture });
   var out = new THREE.Mesh(geometry, material);
   //out.visible = false;
-  out.renderOrder = -1;
+  //out.renderOrder = -1;
   return out;
 };
 
@@ -161,7 +161,7 @@ SphereRenderer.prototype.createOpacityMask_ = function() {
     color: 0x000000, side: THREE.DoubleSide, opacity: 0, transparent: true});
   var opacityMask = new THREE.Mesh(geometry, material);
   opacityMask.name = 'opacityMask';
-  opacityMask.renderOrder = 1;
+  //opacityMask.renderOrder = 1;
 
   this.scene.add(opacityMask);
   return opacityMask;
