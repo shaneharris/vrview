@@ -61,7 +61,6 @@ MultiplayerMode.prototype.renderRoom = function(room){
                 geometry.applyMatrix( new THREE.Matrix4().makeScale( 1.0, 1.2, 0.2 ) );
                 cube = new THREE.Group();
                 cube.cube = new THREE.Mesh( geometry, material );
-                
                 cube.add(cube.cube);
                 cube.leftMeshes=[];
                 cube.rightMeshes=[];
@@ -104,6 +103,8 @@ MultiplayerMode.prototype.renderHands = function(object,frame,isLeap){
     //var countArms = 0;
     var that = this;
     if(isLeap){
+        object.armMeshes.forEach(function(item){object.remove(item);});
+        object.boneMeshes.forEach(function(item){object.remove(item);});
         this.me.leftHand=[];
         this.me.rightHand=[];
         frame.hands.forEach(function(hand){
@@ -137,6 +138,8 @@ MultiplayerMode.prototype.renderHands = function(object,frame,isLeap){
             //armMesh.scale.set( arm.width / 4, arm.width / 2, arm.length );
         });
     }else{
+        object.leftMeshes.forEach(function(item){object.remove(item);});
+        object.rightMeshes.forEach(function(item){object.remove(item);});
         frame.leftHand.forEach(function(bone,i){
             var boneMesh;
             if(object.leftMeshes [ i ]){
@@ -176,11 +179,14 @@ MultiplayerMode.prototype.updateBoneMesh = function( bone, mesh, parent, isLeap)
         if(isLeap){
             mesh.setRotationFromMatrix( new THREE.Matrix4().fromArray( bone.matrix_ ) );
             mesh.quaternion.multiply( new THREE.Quaternion().setFromEuler( new THREE.Euler( 0, 0, Math.PI / 2 ) ) );
-            mesh.scale.set( bone.width/1000, bone.width/1000, bone.length);
+           // mesh.scale.set( bone.width/1000, bone.width/1000, bone.length);
+            mesh.scale.set( bone.width/4, bone.width/4, bone.length);
             mesh.position.set( bone.center_[0],bone.center_[1],bone.center_[2]);
         }else{
+            mesh.scale.set(5,5,5);
             mesh.position.set( bone.center_[0],bone.center_[1],bone.center_[2]);
         }
+        parent.add(mesh);
 };
 
 MultiplayerMode.prototype.leapMotion = function(){
@@ -188,13 +194,14 @@ MultiplayerMode.prototype.leapMotion = function(){
     that.camera.armMeshes = [];
 	that.camera.boneMeshes = [];
     
-    Leap.loop({enableGestures:true,/*optimizeHMD: true,background: true*/}, function(frame){
+    Leap.loop({enableGestures:true,optimizeHMD: true,background: true}, function(frame){
         that.renderHands(that.camera,frame,true);
     }).use('transform', {
-        //quaternion: new THREE.Quaternion().setFromEuler(new THREE.Euler((Math.PI * -0.3), 0, Math.PI, 'ZXY')),
-        position: new THREE.Vector3(0, -50,-100),
-        scale:100,
-        vr: true,
+        quaternion: new THREE.Quaternion().setFromEuler(new THREE.Euler((Math.PI * -0.3), 0, Math.PI, 'ZXY')),
+        //position: new THREE.Vector3(0, -50,-100),
+        scale:0.18
+        //scale:100,
+        //vr: true,
         //effectiveParent:that.camera
     })
     /*.use('boneHand', {
